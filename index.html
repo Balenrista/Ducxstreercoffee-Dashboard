@@ -12,9 +12,9 @@
     
     <style>
         :root { 
-            --bg-main: #18181A; --bg-card: #25262B; 
-            --col-green: #DCE58C; --col-yellow: #F4D160; 
-            --col-red: #F26E5E; --col-light: #F4F4F5; 
+            --bg-main: #273338; --bg-card: #25262B; 
+            --col-green: #89D7B7; --col-yellow: #428475; 
+            --col-red: #7B2525; --col-light: #9CB080; 
             --text-dark: #18181A; 
         }
         body { background-color: var(--bg-main); color: #ffffff; font-family: 'Prompt', 'Poppins', sans-serif; overflow-x: hidden; -webkit-tap-highlight-color: transparent; }
@@ -69,7 +69,7 @@
     <div class="max-w-md mx-auto w-full min-h-screen relative" id="capture-container">
         <header class="p-6 flex justify-between items-center">
             <div>
-                <h1 class="text-2xl font-black tracking-tight">Ducx<span class="text-[#F26E5E]">StreetCoffee</span></h1>
+                <h1 class="text-2xl font-black tracking-tight">Ducx<span class="text-[#607456]">StreetCoffee</span></h1>
                 <p class="text-xs text-gray-400 font-medium tracking-wide">Business Dashboard</p>
             </div>
             <div class="w-12 h-12 bg-[#25262B] rounded-full p-2 flex items-center justify-center border border-[#333]">
@@ -343,7 +343,7 @@
         // ==============================================================
         // 🔴 เอา URL ที่ได้จาก Google Apps Script ล่าสุดมาวางตรงนี้ด้วยครับ!
         // ==============================================================
-        const API_URL = "https://script.google.com/macros/s/AKfycbxuNfsolwukw3RjT11zNhqhWQE1keKVbLf2A-IENOV2myx4Rk1gUrLFfXUfh9S0mgOA/exec";
+        const API_URL = "https://script.google.com/macros/s/AKfycbwEIHp8nvF1vp6XCCn-RKV1Xa3BKZts1rmBCQm7CbUpKvaMmHnSwTbvPkyNYzbyX1cZ/exec";
 
         let globalData = { sales: {}, materials: {}, expenses: {}, materialOptions: [], expenseOptions: [], fullMenuList: [], fullMaterialList: [] };
         let activeTab = 'daily';
