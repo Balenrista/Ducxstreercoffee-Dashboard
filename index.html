@@ -84,10 +84,11 @@
         </header>
 
         <div class="px-6 space-y-6">
-            <div class="grid grid-cols-3 gap-2 bg-[#2b5748] p-1.5 rounded-full border border-[#273338]">
-                <button onclick="switchPage('dashboard')" id="page-btn-dashboard" class="py-2.5 rounded-full font-bold text-xs text-center transition-all bg-[#9cb080] text-[#273338]">DashBoard</button>
-                <button onclick="switchPage('menu')" id="page-btn-menu" class="py-2.5 rounded-full font-bold text-xs text-center transition-all text-gray-400">เมนู</button>
-                <button onclick="switchPage('material')" id="page-btn-material" class="py-2.5 rounded-full font-bold text-xs text-center transition-all text-gray-400">ชี้ตวัตถุดิบ</button>
+            <div class="grid grid-cols-4 gap-1 bg-[#2b5748] p-1.5 rounded-full border border-[#273338]">
+                <button onclick="switchPage('dashboard')" id="page-btn-dashboard" class="py-2.5 rounded-full font-bold text-[11px] text-center transition-all bg-[#9cb080] text-[#273338]">ภาพรวม</button>
+                <button onclick="switchPage('menu')" id="page-btn-menu" class="py-2.5 rounded-full font-bold text-[11px] text-center transition-all text-gray-400">ชี้ตเมนู</button>
+                <button onclick="switchPage('material')" id="page-btn-material" class="py-2.5 rounded-full font-bold text-[11px] text-center transition-all text-gray-400">ชี้ตวัตถุดิบ</button>
+                <button onclick="switchPage('bills')" id="page-btn-bills" class="py-2.5 rounded-full font-bold text-[11px] text-center transition-all text-gray-400">บิลต่างๆ</button>
             </div>
 
             <div id="dashboard-filters-wrapper" class="space-y-4">
@@ -154,7 +155,7 @@
                             <i class="ph-bold ph-package"></i> วัตถุดิบ: <span id="sub-materials">0</span>
                         </button>
                         <button onclick="openModal('expenses')" class="bg-black/20 text-[#273338] py-2.5 rounded-xl text-[10px] md:text-xs font-bold flex items-center justify-center gap-1">
-                            <i class="ph-bold ph-receipt"></i> ค่าใช้จ่าย: <span id="sub-expenses">0</span>
+                            <i class="ph-bold ph-receipt"></i> อื่นๆ: <span id="sub-expenses">0</span>
                         </button>
                     </div>
                 </div>
@@ -186,6 +187,10 @@
 
             <div id="main-page-material" class="hidden space-y-3 mb-10">
                 <div id="full-material-list-container" class="space-y-2"></div>
+            </div>
+
+            <div id="main-page-bills" class="hidden space-y-3 mb-10">
+                <div id="full-bills-list-container" class="space-y-3"></div>
             </div>
 
         </div> 
@@ -257,11 +262,11 @@
                     <input type="date" id="manual-date" class="app-input border border-[#2b5748]">
                 </div>
                 <div>
-                    <label class="text-xs text-[#9cb080] font-bold mb-1 block">รายการค่าใช้จ่าย</label>
+                    <label class="text-xs text-[#9cb080] font-bold mb-1 block">ชื่อรายการค่าใช้จ่าย</label>
                     <input type="text" id="manual-name" placeholder="เช่น ค่าไฟ, ค่าน้ำ, ค่าเช่าร้าน" class="app-input border border-[#2b5748]">
                 </div>
                 <div>
-                    <label class="text-xs text-[#9cb080] font-bold mb-1 block">ยอดเงิน (฿)</label>
+                    <label class="text-xs text-[#9cb080] font-bold mb-1 block">ยอดเงินรวม (฿)</label>
                     <input type="number" id="manual-total" placeholder="0.00" class="app-input border border-[#2b5748]">
                 </div>
                 <button onclick="saveManualDataSubmit()" class="w-full bg-[#618764] text-[#273338] py-3.5 rounded-full font-black mt-2 flex items-center justify-center gap-2 hover:bg-[#537456]">
@@ -311,29 +316,24 @@
             </div>
             <div class="p-6 bg-[#273338] space-y-4 max-h-[70vh] overflow-y-auto custom-scrollbar">
                 <input type="hidden" id="setup-type">
-                
                 <div>
                     <label class="text-xs text-[#9cb080] font-bold mb-1 block" id="setup-label-name">ชื่อรายการ</label>
                     <input type="text" id="setup-name" class="app-input border border-[#2b5748]">
                 </div>
-
                 <div id="setup-field-price" class="hidden">
                     <label class="text-xs text-[#9cb080] font-bold mb-1 block">ราคาขาย (฿)</label>
                     <input type="number" id="setup-price" placeholder="0.00" class="app-input border border-[#2b5748]">
                 </div>
-
                 <div id="setup-field-colB">
                     <label class="text-xs text-[#9cb080] font-bold mb-2 block" id="setup-label-colB">คอลัมน์ B</label>
                     <div id="setup-options-colB" class="flex flex-wrap gap-2"></div>
                     <input type="hidden" id="setup-value-colB">
                 </div>
-
                 <div id="setup-field-colC">
                     <label class="text-xs text-[#9cb080] font-bold mb-2 block" id="setup-label-colC">คอลัมน์ C</label>
                     <div id="setup-options-colC" class="flex flex-wrap gap-2"></div>
                     <input type="hidden" id="setup-value-colC">
                 </div>
-
                 <button onclick="saveSetupDataSubmit()" id="setup-submit-btn" class="w-full text-[#273338] py-3.5 rounded-full font-black mt-2 flex items-center justify-center gap-2">
                     <i class="ph-bold ph-check-circle text-lg"></i> ยืนยันสร้างรายการใหม่
                 </button>
@@ -341,10 +341,38 @@
         </div>
     </div>
 
-    <script>
-        const API_URL = "https://script.google.com/macros/s/AKfycbxdC64D3CUPBoJucfrzx6qlRtXu0f7PbavEJVrpyyy5dxZv9IEibgxkISGPlvWx0I9H/exec";
+    <div id="billUploadModal" class="modal-overlay" onclick="closeBillUploadModal()">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="p-6 pb-4 bg-[#9cb080] text-[#273338] flex justify-between items-center rounded-t-[32px]">
+                <h3 class="font-black text-xl flex items-center gap-2"><i class="ph-bold ph-cloud-arrow-up"></i> แนบหลักฐานสลิป / บิล</h3>
+                <button onclick="closeBillUploadModal()" class="w-8 h-8 bg-black/10 rounded-full flex items-center justify-center hover:bg-black/20"><i class="ph-bold ph-x"></i></button>
+            </div>
+            <div class="p-6 bg-[#273338] space-y-4">
+                <input type="hidden" id="upload-bill-row-index">
+                <div>
+                    <p class="text-xs text-gray-400 font-bold mb-0.5">รายการบิลที่เลือก</p>
+                    <p class="text-base font-black text-white" id="upload-bill-item-name">-</p>
+                </div>
+                <div>
+                    <label class="text-xs text-[#9cb080] font-bold mb-1 block">ถ่ายรูปบิลสลิปจากมือถือ</label>
+                    <input type="file" id="upload-bill-file" accept="image/*" class="w-full text-sm text-[#9cb080] file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#273338] file:text-[#9cb080] border border-[#2b5748] rounded-full p-1">
+                    <img id="upload-bill-preview" class="mt-3 rounded-xl hidden max-h-40 mx-auto object-contain border border-[#2b5748]">
+                </div>
+                <div>
+                    <label class="text-xs text-[#9cb080] font-bold mb-1 block">พิมพ์โน้ต / หมายเหตุ</label>
+                    <input type="text" id="upload-bill-note" placeholder="เขียนบันทึกข้อความเพิ่มเติม" class="app-input border border-[#2b5748]">
+                </div>
+                <button onclick="saveBillUploadSubmit()" class="w-full bg-[#9cb080] text-[#273338] py-3.5 rounded-full font-black mt-2 flex items-center justify-center gap-2 hover:bg-[#8aa06b]">
+                    <i class="ph-bold ph-check-circle text-lg"></i> บันทึกสลิปและข้อมูล
+                </button>
+            </div>
+        </div>
+    </div>
 
-        let globalData = { sales: {}, materials: {}, expenses: {}, materialOptions: [], expenseOptions: [], fullMenuList: [], fullMaterialList: [] };
+    <script>
+        const API_URL = "https://script.google.com/macros/s/AKfycbz7-sczFW9CNn8qW46wvim-nQY-Sd1UClK-c8roFoU3z5KSAs-oCKzJRCWf-kujTpV_/exec";
+
+        let globalData = { sales: {}, materials: {}, expenses: {}, materialOptions: [], expenseOptions: [], fullMenuList: [], fullMaterialList: [], fullBillsList: [] };
         let activeTab = 'daily';
         let trendChartInstance = null; 
         const fMoney = (num) => Number(num || 0).toLocaleString('th-TH', { maximumFractionDigits: 2 });
@@ -353,7 +381,6 @@
         
         let currentBase64 = ""; let currentMimeType = ""; let scannedItemsArray = []; 
 
-        // 🟢🟢 ฟังก์ชันสำคัญที่เผลอลบไป เอาคืนมาแล้วครับ! 🟢🟢
         function setLoading(isActive, text = "SYNCING DATA...") {
             document.getElementById('loading').style.display = isActive ? 'flex' : 'none';
             if(text) document.getElementById('loading-text').innerText = text;
@@ -376,29 +403,38 @@
             } finally { setLoading(false); }
         }
 
+        // 🟢 [ปรับปรุง] ระบบสลับหน้าหลักด้านบน (รองรับหน้า 'bills' ด้วย เพื่อคุมการโชว์ตัวกรอง)
         function switchPage(page) {
             document.getElementById('main-page-dashboard').classList.add('hidden');
             document.getElementById('main-page-menu').classList.add('hidden');
             document.getElementById('main-page-material').classList.add('hidden');
+            document.getElementById('main-page-bills').classList.add('hidden');
             document.getElementById('dashboard-filters-wrapper').classList.add('hidden');
             
-            document.getElementById('page-btn-dashboard').className = "py-2.5 rounded-full font-bold text-xs text-center transition-all text-[#9cb080] opacity-70";
-            document.getElementById('page-btn-menu').className = "py-2.5 rounded-full font-bold text-xs text-center transition-all text-[#9cb080] opacity-70";
-            document.getElementById('page-btn-material').className = "py-2.5 rounded-full font-bold text-xs text-center transition-all text-[#9cb080] opacity-70";
+            document.getElementById('page-btn-dashboard').className = "py-2.5 rounded-full font-bold text-[11px] text-center transition-all text-[#9cb080] opacity-70";
+            document.getElementById('page-btn-menu').className = "py-2.5 rounded-full font-bold text-[11px] text-center transition-all text-[#9cb080] opacity-70";
+            document.getElementById('page-btn-material').className = "py-2.5 rounded-full font-bold text-[11px] text-center transition-all text-[#9cb080] opacity-70";
+            document.getElementById('page-btn-bills').className = "py-2.5 rounded-full font-bold text-[11px] text-center transition-all text-[#9cb080] opacity-70";
 
             if (page === 'dashboard') {
                 document.getElementById('main-page-dashboard').classList.remove('hidden');
                 document.getElementById('dashboard-filters-wrapper').classList.remove('hidden');
-                document.getElementById('page-btn-dashboard').className = "py-2.5 rounded-full font-bold text-xs text-center transition-all bg-[#9cb080] text-[#273338]";
+                document.getElementById('page-btn-dashboard').className = "py-2.5 rounded-full font-bold text-[11px] text-center transition-all bg-[#9cb080] text-[#273338]";
                 document.getElementById('display-period').innerText = "Overview";
             } else if (page === 'menu') {
                 document.getElementById('main-page-menu').classList.remove('hidden');
-                document.getElementById('page-btn-menu').className = "py-2.5 rounded-full font-bold text-xs text-center transition-all bg-[#9cb080] text-[#273338]";
+                document.getElementById('page-btn-menu').className = "py-2.5 rounded-full font-bold text-[11px] text-center transition-all bg-[#9cb080] text-[#273338]";
                 document.getElementById('display-period').innerText = "ชี้ตเมนูทั้งหมด";
             } else if (page === 'material') {
                 document.getElementById('main-page-material').classList.remove('hidden');
-                document.getElementById('page-btn-material').className = "py-2.5 rounded-full font-bold text-xs text-center transition-all bg-[#9cb080] text-[#273338]";
+                document.getElementById('page-btn-material').className = "py-2.5 rounded-full font-bold text-[11px] text-center transition-all bg-[#9cb080] text-[#273338]";
                 document.getElementById('display-period').innerText = "ชี้ตวัตถุดิบทั้งหมด";
+            } else if (page === 'bills') {
+                // หน้าบิลต่างๆ: เปิดให้โชว์หน้าบิล และโชว์ตัวกรอง วัน/เดือน/ปี เหมือนของหน้าหลัก
+                document.getElementById('main-page-bills').classList.remove('hidden');
+                document.getElementById('dashboard-filters-wrapper').classList.remove('hidden');
+                document.getElementById('page-btn-bills').className = "py-2.5 rounded-full font-bold text-[11px] text-center transition-all bg-[#9cb080] text-[#273338]";
+                document.getElementById('display-period').innerText = "ชี้ตบิลต่างๆ";
             }
         }
 
@@ -436,6 +472,89 @@
                         </div>`;
                 });
             }
+        }
+
+        // 🟢 [ฟังก์ชันใหม่] เรนเดอร์รายการหน้าชี้ตบิลต่างๆ คัดกรองตาม วัน/เดือน/ปี และแทรกปุ่มเล็กข้างรายการสลิป
+        function renderBillsList(isMatch) {
+            const container = document.getElementById('full-bills-list-container');
+            container.innerHTML = '';
+            if(!globalData.fullBillsList || globalData.fullBillsList.length === 0) {
+                container.innerHTML = `<p class="text-[#618764] text-xs text-center py-8 font-bold">ไม่มีข้อมูลบิลใน Google Sheet</p>`;
+                return;
+            }
+
+            const filtered = globalData.fullBillsList.filter(item => isMatch(item.date));
+            if(filtered.length === 0) {
+                container.innerHTML = `<p class="text-[#618764] text-xs text-center py-8 font-bold">ไม่มีรายการบิลในรอบเวลานี้</p>`;
+                return;
+            }
+
+            filtered.forEach(item => {
+                // สร้างโค้ดปุ่มเปิดดูรูป หากในช่องเซลล์มีลิงก์รูปอยู่แล้ว
+                let btnViewImg = item.imageUrl ? 
+                    `<button onclick="window.open('${item.imageUrl}', '_blank')" class="text-[11px] bg-[#273338] text-[#9cb080] px-2.5 py-1 rounded-lg font-black flex items-center gap-1"><i class="ph-bold ph-image"></i> ดูบิล</button>` : 
+                    `<span class="text-[10px] text-gray-400 italic">ยังไม่ได้แนบสลิป</span>`;
+                
+                container.innerHTML += `
+                    <div class="bg-[#2b5748] p-4 rounded-2xl border border-[#273338] space-y-2">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <span class="text-[10px] text-gray-400 font-bold">${item.displayDate}</span>
+                                <p class="font-bold text-white text-sm mt-0.5">${item.name}</p>
+                            </div>
+                            <div class="text-right">
+                                <span class="text-[#9cb080] font-black text-lg block">${fMoney(item.price)} ฿</span>
+                                <div class="mt-1 flex justify-end gap-2 items-center">
+                                    ${btnViewImg}
+                                    <button onclick="openBillUploadModal(${item.rowIndex}, \`${item.name}\`, \`${item.note}\`)" class="w-7 h-7 bg-[#9cb080] text-[#273338] rounded-full flex items-center justify-center hover:bg-[#8aa06b]" title="แนบหลักฐานบิลสลิป">
+                                        <i class="ph-bold ph-camera text-sm"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        ${item.note ? `<p class="text-xs text-gray-200 bg-black/15 p-2 rounded-xl border border-[#273338]/30"><span class="font-bold text-[#9cb080]">Note:</span> ${item.note}</p>` : ''}
+                    </div>`;
+            });
+        }
+
+        // 🟢 [ฟังก์ชันใหม่] จัดการเปิด/ปิด หน้าต่างอัปโหลดสลิปรายตัว
+        let currentBillBase64 = ""; let currentBillMimeType = "";
+
+        document.getElementById('upload-bill-file').addEventListener('change', function(e) {
+            const file = e.target.files[0]; if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                currentBillBase64 = event.target.result.split(',')[1]; currentBillMimeType = file.type;
+                const preview = document.getElementById('upload-bill-preview'); preview.src = event.target.result; preview.classList.remove('hidden');
+            };
+            reader.readAsDataURL(file);
+        });
+
+        function openBillUploadModal(rowIndex, name, note) {
+            document.getElementById('upload-bill-row-index').value = rowIndex;
+            document.getElementById('upload-bill-item-name').innerText = name;
+            document.getElementById('upload-bill-note').value = (note === 'undefined' || note === 'null') ? '' : note;
+            document.getElementById('upload-bill-file').value = '';
+            document.getElementById('upload-bill-preview').classList.add('hidden');
+            currentBillBase64 = ""; currentBillMimeType = "";
+            document.getElementById('billUploadModal').style.display = 'flex';
+        }
+        function closeBillUploadModal() { document.getElementById('billUploadModal').style.display = 'none'; }
+
+        async function saveBillUploadSubmit() {
+            const rowIndex = document.getElementById('upload-bill-row-index').value;
+            const note = document.getElementById('upload-bill-note').value;
+            
+            setLoading(true, "กำลังอัปโหลดหลักฐานสลิป...");
+            try {
+                await fetch(API_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ action: 'updateBillRow', rowIndex: parseInt(rowIndex), note: note, imageBase64: currentBillBase64, mimeType: currentBillMimeType })
+                });
+                alert("อัปเดตหลักฐานสลิปและหมายเหตุเรียบร้อย! 🎉");
+                closeBillUploadModal();
+                fetchData();
+            } catch(err) { alert("เกิดข้อผิดพลาด: " + err.message); } finally { setLoading(false); }
         }
 
         const OPTIONS_STOCK_UNIT = ['แก้ว', 'ขวด', 'ถุง', 'กิโล', 'แพ็ค', 'ของ', 'ชิ้น', 'กล่อง', 'นม'];
@@ -508,11 +627,8 @@
         async function saveSetupDataSubmit() {
             const type = document.getElementById('setup-type').value;
             const name = document.getElementById('setup-name').value.trim();
-
             if (!name) { alert("กรุณากรอกชื่อรายการด้วยครับ"); return; }
-
             let payload = { name: name };
-
             if (type === 'material') {
                 payload.action = 'addNewMaterialSetup';
                 payload.unitStock = document.getElementById('setup-value-colB').value;
@@ -524,49 +640,32 @@
                 payload.price = parseFloat(price);
                 payload.group = document.getElementById('setup-value-colC').value;
             }
-
             setLoading(true, "กำลังลงทะเบียนรายการใหม่...");
             try {
                 await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) });
-                alert("สร้างรายการใหม่เรียบร้อยแล้ว! 🎉");
-                closeSetupModal();
-                fetchData();
+                alert("สร้างรายการใหม่เรียบร้อยแล้ว! 🎉"); closeSetupModal(); fetchData();
             } catch (err) { alert("เกิดปัญหา: " + err.message); } finally { setLoading(false); }
         }
 
         function openMaterialTransactionModal() {
-            const today = new Date();
-            document.getElementById('mat-trans-date').value = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-            document.getElementById('mat-trans-qty').value = '';
-            document.getElementById('mat-trans-price').value = '';
-            
-            const select = document.getElementById('mat-trans-name');
-            select.innerHTML = '';
+            const today = new Date(); document.getElementById('mat-trans-date').value = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+            document.getElementById('mat-trans-qty').value = ''; document.getElementById('mat-trans-price').value = '';
+            const select = document.getElementById('mat-trans-name'); select.innerHTML = '';
             if(globalData.materialOptions && globalData.materialOptions.length > 0) {
                 globalData.materialOptions.forEach(opt => { select.innerHTML += `<option value="${opt}">${opt}</option>`; });
             } else { select.innerHTML = '<option value="">-- ไม่พบรายชื่อวัตถุดิบ --</option>'; }
-
             document.getElementById('matTransModal').style.display = 'flex';
         }
         function closeMaterialTransactionModal() { document.getElementById('matTransModal').style.display = 'none'; }
 
         async function saveMaterialTransactionSubmit() {
-            const date = document.getElementById('mat-trans-date').value;
-            const name = document.getElementById('mat-trans-name').value;
-            const qty = document.getElementById('mat-trans-qty').value;
-            const price = document.getElementById('mat-trans-price').value;
-
+            const date = document.getElementById('mat-trans-date').value; const name = document.getElementById('mat-trans-name').value;
+            const qty = document.getElementById('mat-trans-qty').value; const price = document.getElementById('mat-trans-price').value;
             if(!name || !qty || !price) { alert("กรุณากรอกข้อมูลให้ครบถ้วน"); return; }
-
             setLoading(true, "กำลังบันทึกซื้อวัตถุดิบ...");
             try {
-                await fetch(API_URL, {
-                    method: 'POST',
-                    body: JSON.stringify({ action: 'saveMaterial', date: date, name: name, qty: parseFloat(qty), price: parseFloat(price) })
-                });
-                alert("บันทึกซื้อวัตถุดิบเรียบร้อยแล้ว! 🎉");
-                closeMaterialTransactionModal();
-                fetchData();
+                await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'saveMaterial', date: date, name: name, qty: parseFloat(qty), price: parseFloat(price) }) });
+                alert("บันทึกซื้อวัตถุดิบเรียบร้อยแล้ว! 🎉"); closeMaterialTransactionModal(); fetchData();
             } catch (err) { alert("เกิดข้อผิดพลาด: " + err.message); } finally { setLoading(false); }
         }
 
@@ -667,7 +766,9 @@
                 y = document.getElementById('filter-monthly-year').value; m = document.getElementById('filter-monthly-month').value;
                 const mName = document.getElementById('filter-monthly-month').options[document.getElementById('filter-monthly-month').selectedIndex].text; dateLabel = `${mName} ${y}`;
             } else if (activeTab === 'yearly') { y = document.getElementById('filter-yearly-year').value; dateLabel = `YEAR ${y}`; }
-            if(document.getElementById('main-page-dashboard').classList.contains('hidden') === false) {
+            
+            // เปลี่ยนเงื่อนไขโชว์หัวแถบตัวกรองให้รองรับหน้าจอ บิลต่างๆ ด้วย
+            if(document.getElementById('main-page-dashboard').classList.contains('hidden') === false || document.getElementById('main-page-bills').classList.contains('hidden') === false) {
                 document.getElementById('badge-mode').innerText = dateLabel;
             }
             const isMatch = (dateStr) => {
@@ -710,6 +811,9 @@
             currentLists.materials = Object.values(listMats).sort((a,b) => b.total - a.total);
             currentLists.expenses = Object.values(listExps).sort((a,b) => b.total - a.total);
             updateUI(); drawChart();
+            
+            // 🟢 อัปเดตและกรองข้อมูลแถบหน้าชี้ตบิลต่างๆ ด้วยระบบเดียวกันทันที
+            renderBillsList(isMatch);
         }
 
         function updateUI() {
