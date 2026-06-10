@@ -12,18 +12,16 @@
     
     <style>
         :root { 
-            /* 🟢 เปลี่ยนโทนสีทั้งแอปตาม Palette ใหม่ */
-            --bg-main: #273338;    /* พื้นหลังหลัก (เขียวเข้มสุด) */
-            --bg-card: #2b5748;    /* พื้นหลังการ์ด (เขียวเข้มกลาง) */
-            --col-green: #9cb080;  /* สีไฮไลท์หลัก (เขียวอ่อนสุด) */
-            --col-yellow: #9cb080; /* สีไฮไลท์ปุ่ม/ยอดขาย (เขียวอ่อนสุด) */
-            --col-red: #618764;    /* สีไฮไลท์รอง/รายจ่าย (เขียวกลาง) */
+            --bg-main: #273338; 
+            --bg-card: #2b5748; 
+            --col-green: #9cb080;  
+            --col-yellow: #9cb080; 
+            --col-red: #618764;    
             --col-light: #9cb080;  
-            --text-dark: #273338;  /* สีตัวหนังสือบนปุ่มสว่าง */
+            --text-dark: #273338;  
         }
         body { background-color: var(--bg-main); color: #ffffff; font-family: 'Prompt', 'Poppins', sans-serif; overflow-x: hidden; -webkit-tap-highlight-color: transparent; }
         
-        /* 🟢 เปลี่ยนสีอนิเมชั่นตอนโหลดให้เข้าตีม */
         .loader { display: flex; gap: .5em; margin-bottom: 1rem; }
         .leaf { width: 1em; height: 3em; background-color: rgb(0, 0, 0,.3); clip-path: polygon(0% 0%,100% 0%,100% 100%,0% 81%); transform: rotate(-30deg); animation: color 1200ms infinite; animation-delay: 800ms; }
         .leaf:nth-child(2) { clip-path: polygon(0% 35%,100% 35%,100% 100%,0% 81%); animation-delay: 400ms; }
@@ -46,7 +44,6 @@
         .card-light { background-color: var(--col-light); color: var(--text-dark); }
         .card-dark { background-color: var(--bg-card); color: #ffffff; }
         
-        /* เปลี่ยนสีเมนูด้านล่าง */
         .bottom-nav { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background-color: #273338; padding: 12px 14px; border-radius: 9999px; display: flex; gap: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); z-index: 100; border: 1px solid #2b5748; width: calc(100% - 32px); max-w: 410px; justify-content: space-between; }
         .nav-item { width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #8c8c8c; font-size: 1.35rem; transition: all 0.3s ease; }
         .nav-item.active { background-color: var(--col-yellow); color: var(--text-dark); }
@@ -355,6 +352,12 @@
         let currentLists = { sales: [], materials: [], expenses: [] };
         
         let currentBase64 = ""; let currentMimeType = ""; let scannedItemsArray = []; 
+
+        // 🟢🟢 ฟังก์ชันสำคัญที่เผลอลบไป เอาคืนมาแล้วครับ! 🟢🟢
+        function setLoading(isActive, text = "SYNCING DATA...") {
+            document.getElementById('loading').style.display = isActive ? 'flex' : 'none';
+            if(text) document.getElementById('loading-text').innerText = text;
+        }
 
         async function fetchData() {
             setLoading(true, "SYNCING DATA...");
