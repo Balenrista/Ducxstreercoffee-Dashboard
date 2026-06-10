@@ -85,8 +85,8 @@
 
         <div class="px-6 space-y-6">
             <div class="grid grid-cols-3 gap-2 bg-[#2b5748] p-1.5 rounded-full border border-[#273338]">
-                <button onclick="switchPage('dashboard')" id="page-btn-dashboard" class="py-2.5 rounded-full font-bold text-xs text-center transition-all bg-[#9cb080] text-[#273338]">ภาพรวม</button>
-                <button onclick="switchPage('menu')" id="page-btn-menu" class="py-2.5 rounded-full font-bold text-xs text-center transition-all text-gray-400">ชี้ตเมนู</button>
+                <button onclick="switchPage('dashboard')" id="page-btn-dashboard" class="py-2.5 rounded-full font-bold text-xs text-center transition-all bg-[#9cb080] text-[#273338]">DashBoard</button>
+                <button onclick="switchPage('menu')" id="page-btn-menu" class="py-2.5 rounded-full font-bold text-xs text-center transition-all text-gray-400">เมนู</button>
                 <button onclick="switchPage('material')" id="page-btn-material" class="py-2.5 rounded-full font-bold text-xs text-center transition-all text-gray-400">ชี้ตวัตถุดิบ</button>
             </div>
 
@@ -154,7 +154,7 @@
                             <i class="ph-bold ph-package"></i> วัตถุดิบ: <span id="sub-materials">0</span>
                         </button>
                         <button onclick="openModal('expenses')" class="bg-black/20 text-[#273338] py-2.5 rounded-xl text-[10px] md:text-xs font-bold flex items-center justify-center gap-1">
-                            <i class="ph-bold ph-receipt"></i> อื่นๆ: <span id="sub-expenses">0</span>
+                            <i class="ph-bold ph-receipt"></i> ค่าใช้จ่าย: <span id="sub-expenses">0</span>
                         </button>
                     </div>
                 </div>
@@ -257,11 +257,11 @@
                     <input type="date" id="manual-date" class="app-input border border-[#2b5748]">
                 </div>
                 <div>
-                    <label class="text-xs text-[#9cb080] font-bold mb-1 block">ชื่อรายการค่าใช้จ่าย</label>
+                    <label class="text-xs text-[#9cb080] font-bold mb-1 block">รายการค่าใช้จ่าย</label>
                     <input type="text" id="manual-name" placeholder="เช่น ค่าไฟ, ค่าน้ำ, ค่าเช่าร้าน" class="app-input border border-[#2b5748]">
                 </div>
                 <div>
-                    <label class="text-xs text-[#9cb080] font-bold mb-1 block">ยอดเงินรวม (฿)</label>
+                    <label class="text-xs text-[#9cb080] font-bold mb-1 block">ยอดเงิน (฿)</label>
                     <input type="number" id="manual-total" placeholder="0.00" class="app-input border border-[#2b5748]">
                 </div>
                 <button onclick="saveManualDataSubmit()" class="w-full bg-[#618764] text-[#273338] py-3.5 rounded-full font-black mt-2 flex items-center justify-center gap-2 hover:bg-[#537456]">
