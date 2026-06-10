@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>DucxStreetCoffee App</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Prompt:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root { 
+            --bg-main: #18181A; --bg-card: #25262B; 
+            --col-green: #DCE58C; --col-yellow: #F4D160; 
+            --col-red: #F26E5E; --col-light: #F4F4F5; 
+            --text-dark: #18181A; 
+        }
+        body { background-color: var(--bg-main); color: #ffffff; font-family: 'Prompt', 'Poppins', sans-serif; overflow-x: hidden; -webkit-tap-highlight-color: transparent; }
+        
+        .loader { display: flex; gap: .5em; margin-bottom: 1rem; }
+        .leaf { width: 1em; height: 3em; background-color: rgb(0, 0, 0,.3); clip-path: polygon(0% 0%,100% 0%,100% 100%,0% 81%); transform: rotate(-30deg); animation: color 1200ms infinite; animation-delay: 800ms; }
+        .leaf:nth-child(2) { clip-path: polygon(0% 35%,100% 35%,100% 100%,0% 81%); animation-delay: 400ms; }
+        .leaf:nth-child(1) { clip-path: polygon(0% 70%,100% 70%,100% 100%,0% 81%); animation-delay: 0ms; }
+        @keyframes color { from { background-color: lightblue; } to { background-color: #F4D160; } }
+
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .custom-scrollbar::-webkit-scrollbar { width: 5px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
+        
+        .pill-tab { padding: 8px 20px; border-radius: 9999px; font-weight: 600; font-size: 0.85rem; color: #8c8c8c; background-color: var(--bg-card); white-space: nowrap; transition: all 0.3s ease; }
+        .pill-tab.active { background-color: var(--col-yellow); color: var(--text-dark); }
+        .app-card { border-radius: 24px; padding: 24px; position: relative; overflow: hidden; transition: transform 0.2s; }
+        .app-card:active { transform: scale(0.98); }
+        .card-green { background-color: var(--col-green); color: var(--text-dark); }
+        .card-yellow { background-color: var(--col-yellow); color: var(--text-dark); }
+        .card-red { background-color: var(--col-red); color: var(--text-dark); }
+        .card-light { background-color: var(--col-light); color: var(--text-dark); }
+        .card-dark { background-color: var(--bg-card); color: #ffffff; }
+        
+        .bottom-nav { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background-color: #111111; padding: 12px 14px; border-radius: 9999px; display: flex; gap: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); z-index: 100; border: 1px solid #333; width: calc(100% - 32px); max-w: 410px; justify-content: space-between; }
+        .nav-item { width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #666; font-size: 1.35rem; transition: all 0.3s ease; }
+        .nav-item.active { background-color: var(--col-yellow); color: var(--text-dark); }
+        .nav-item:not(.active):hover { color: #fff; }
+        
+        .app-input { background-color: var(--bg-card); color: white; border: none; border-radius: 9999px; padding: 12px 20px; width: 100%; font-size: 0.9rem; outline: none; color-scheme: dark; }
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); z-index: 200; display: none; justify-content: center; align-items: flex-end;}
+        .modal-content { background-color: var(--bg-main); width: 100%; max-width: 600px; max-height: 85vh; border-radius: 32px 32px 0 0; display: flex; flex-direction: column; overflow: hidden; animation: slideUp 0.3s ease-out;}
+        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        .svg-icon { width: 100%; height: 100%; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+
+        /* ปุ่มเลือกแบบเม็ดยาฟอร์ม C-A-B */
+        .choice-btn { background-color: var(--bg-card); color: #8c8c8c; border: 1px solid #333; padding: 10px 16px; border-radius: 9999px; font-size: 0.85rem; font-weight: 600; transition: all 0.2s; text-align: center; }
+        .choice-btn.selected { background-color: var(--col-yellow); color: var(--text-dark); border-color: var(--col-yellow); }
+    </style>
+</head>
+<body class="pb-28">
+
+    <div id="loading" class="fixed inset-0 bg-[#18181A] z-[999] flex flex-col items-center justify-center">
+        <div class="loader">
+            <div class="leaf"></div><div class="leaf"></div><div class="leaf"></div>
+        </div>
+        <p class="text-[#F4D160] font-bold tracking-widest text-sm animate-pulse" id="loading-text">SYNCING DATA...</p>
+    </div>
+
+    <div class="max-w-md mx-auto w-full min-h-screen relative" id="capture-container">
+        <header class="p-6 flex justify-between items-center">
+            <div>
+                <h1 class="text-2xl font-black tracking-tight">Ducx<span class="text-[#F26E5E]">StreetCoffee</span></h1>
+                <p class="text-xs text-gray-400 font-medium tracking-wide">Business Dashboard</p>
+            </div>
+            <div class="w-12 h-12 bg-[#25262B] rounded-full p-2 flex items-center justify-center border border-[#333]">
+                <svg class="svg-icon" stroke="#F4D160" stroke-width="1.5" viewBox="0 0 24 24">
+                    <path d="M17 8h1a4 4 0 110 8h-1"></path>
+                    <path d="M3 8h14v9a4 4 0 01-4 4H7a4 4 0 01-4-4V8z"></path>
+                    <path d="M6 2v3M10 2v3M14 2v3"></path>
+                </svg>
+            </div>
+        </header>
+
+        <div class="px-6 space-y-6">
+            <div class="grid grid-cols-3 gap-2 bg-[#25262B] p-1.5 rounded-full border border-[#333]">
+                <button onclick="switchPage('dashboard')" id="page-btn-dashboard" class="py-2.5 rounded-full font-bold text-xs text-center transition-all bg-[#F4D160] text-[#18181A]">ภาพรวม</button>
+                <button onclick="switchPage('menu')" id="page-btn-menu" class="py-2.5 rounded-full font-bold text-xs text-center transition-all text-gray-400">ชี้ตเมนู</button>
+                <button onclick="switchPage('material')" id="page-btn-material" class="py-2.5 rounded-full font-bold text-xs text-center transition-all text-gray-400">ชี้ตวัตถุดิบ</button>
+            </div>
+
+            <div id="dashboard-filters-wrapper" class="space-y-4">
+                <div class="flex gap-3 overflow-x-auto no-scrollbar pb-1 items-center">
+                    <button onclick="setTab('daily')" id="tab-daily" class="pill-tab active">Daily</button>
+                    <button onclick="setTab('monthly')" id="tab-monthly" class="pill-tab">Monthly</button>
+                    <button onclick="setTab('yearly')" id="tab-yearly" class="pill-tab">Yearly</button>
+                </div>
+
+                <div id="filter-section" class="flex gap-2">
+                    <div id="control-daily" class="w-full"><input type="date" id="filter-date" class="app-input" onchange="applyFilters()"></div>
+                    <div id="control-monthly" class="hidden w-full flex gap-2">
+                        <select id="filter-monthly-month" class="app-input" onchange="applyFilters()">
+                            <option value="01">มกราคม</option><option value="02">กุมภาพันธ์</option><option value="03">มีนาคม</option>
+                            <option value="04">เมษายน</option><option value="05">พฤษภาคม</option><option value="06">มิถุนายน</option>
+                            <option value="07">กรกฎาคม</option><option value="08">สิงหาคม</option><option value="09">กันยายน</option>
+                            <option value="10">ตุลาคม</option><option value="11">พฤศจิกายน</option><option value="12">ธันวาคม</option>
+                        </select>
+                        <select id="filter-monthly-year" class="app-input w-32" onchange="applyFilters()"></select>
+                    </div>
+                    <div id="control-yearly" class="hidden w-full"><select id="filter-yearly-year" class="app-input" onchange="applyFilters()"></select></div>
+                </div>
+            </div>
+
+            <div class="flex justify-between items-end">
+                <h2 class="text-xl font-bold" id="display-period">Overview</h2>
+                <span id="badge-mode" class="text-[10px] font-bold tracking-widest uppercase bg-[#25262B] px-3 py-1.5 rounded-full text-gray-400">Loading</span>
+            </div>
+
+            <div id="main-page-dashboard" class="space-y-6">
+                <div class="app-card card-green cursor-pointer" onclick="openModal('sales')">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <p class="text-sm font-semibold opacity-80 uppercase tracking-wider">Revenue (ยอดขาย)</p>
+                            <h3 class="text-4xl font-black mt-1" id="kpi-sales">0 ฿</h3>
+                        </div>
+                        <div class="w-10 h-10 bg-black/10 rounded-full flex items-center justify-center"><i class="ph-bold ph-trend-up text-xl"></i></div>
+                    </div>
+                    <div class="flex items-center gap-2 text-xs font-bold bg-black/5 w-fit px-3 py-1 rounded-full"><i class="ph-fill ph-receipt"></i> ดูรายการบิลขาย</div>
+                </div>
+
+                <div id="card-net-profit" class="app-card card-yellow">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <p class="text-sm font-semibold opacity-80 uppercase tracking-wider">Net Income (กำไรสุทธิ)</p>
+                            <h3 class="text-4xl font-black mt-1" id="kpi-profit">0 ฿</h3>
+                        </div>
+                        <div class="w-10 h-10 bg-black/10 rounded-full flex items-center justify-center"><i id="icon-profit" class="ph-bold ph-coins text-xl"></i></div>
+                    </div>
+                    <div class="flex justify-between items-center text-xs font-bold opacity-80 border-t border-black/10 pt-3 mt-2">
+                        <span id="cat-speech">"ยอดเยี่ยมมากเหมียว!"</span>
+                    </div>
+                </div>
+
+                <div class="app-card card-red">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <p class="text-sm font-semibold opacity-90 text-white uppercase tracking-wider">Total Cost (รายจ่าย)</p>
+                            <h3 class="text-4xl font-black mt-1 text-white" id="kpi-expenses">0 ฿</h3>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2 mt-2">
+                        <button onclick="openModal('materials')" class="bg-black/20 text-white py-2.5 rounded-xl text-[10px] md:text-xs font-bold flex items-center justify-center gap-1">
+                            <i class="ph-bold ph-package"></i> วัตถุดิบ: <span id="sub-materials">0</span>
+                        </button>
+                        <button onclick="openModal('expenses')" class="bg-black/20 text-white py-2.5 rounded-xl text-[10px] md:text-xs font-bold flex items-center justify-center gap-1">
+                            <i class="ph-bold ph-receipt"></i> อื่นๆ: <span id="sub-expenses">0</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="app-card card-light cursor-pointer" onclick="openModal('sales')">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <p class="text-sm font-semibold opacity-80 uppercase tracking-wider">Volume (จำนวนแก้ว)</p>
+                            <h3 class="text-3xl font-black mt-1" id="kpi-qty">0 แก้ว</h3>
+                        </div>
+                        <div class="w-12 h-12 bg-black/5 rounded-full flex items-center justify-center"><i class="ph-bold ph-coffee text-2xl"></i></div>
+                    </div>
+                </div>
+
+                <div class="app-card card-dark">
+                    <p class="text-sm text-gray-400 font-bold mb-4 flex items-center gap-2"><i class="ph-bold ph-chart-line-up text-[#F4D160]"></i> <span id="chart-title">Net Income Trend</span></p>
+                    <div class="w-full h-48 relative"><canvas id="trendChart"></canvas></div>
+                </div>
+
+                <div class="app-card card-dark flex flex-col mb-10">
+                    <div class="flex justify-between items-center mb-4"><p class="text-sm text-white font-bold flex items-center gap-2"><i class="ph-fill ph-star text-[#F26E5E]"></i> Top 10 Menu</p></div>
+                    <div id="top10-list" class="flex-grow space-y-3"></div>
+                </div>
+            </div>
+
+            <div id="main-page-menu" class="hidden space-y-3 mb-10">
+                <div id="full-menu-list-container" class="space-y-2"></div>
+            </div>
+
+            <div id="main-page-material" class="hidden space-y-3 mb-10">
+                <div id="full-material-list-container" class="space-y-2"></div>
+            </div>
+
+        </div> 
+    </div> 
+
+    <div class="bottom-nav no-capture">
+        <button class="nav-item active" id="nav-btn-home" onclick="location.reload()"><i class="ph-fill ph-house"></i></button>
+        <button class="nav-item" onclick="openScanModal()" title="สแกนยอดขาย POS"><i class="ph-bold ph-scan text-[#DCE58C]"></i></button>
+        <button class="nav-item" onclick="openManualModal('expense')" title="เพิ่มค่าใช้จ่าย"><i class="ph-bold ph-receipt text-[#F26E5E]"></i></button>
+        <button class="nav-item" onclick="openMaterialTransactionModal()" title="บันทึกซื้อวัตถุดิบลงตาราง"><i class="ph-bold ph-shopping-cart text-[#F4D160]"></i></button>
+        <button class="nav-item" onclick="openSetupModal('menu')" title="สร้างเมนูใหม่"><i class="ph-bold ph-coffee-bean text-white"></i></button>
+        <button class="nav-item" onclick="openSetupModal('material')" title="สร้างวัตถุดิบใหม่"><i class="ph-bold ph-package text-white"></i></button>
+        <button onclick="saveAsImage()" class="nav-item"><i class="ph-fill ph-camera"></i></button>
+    </div>
+
+    <div id="detailModal" class="modal-overlay" onclick="closeModal()">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div id="modal-header" class="p-6 pb-4 bg-[#F26E5E] text-[#18181A] flex justify-between items-center rounded-t-[32px]">
+                <h3 class="font-black text-xl flex items-center gap-2" id="modal-title">Details</h3>
+                <button onclick="closeModal()" class="w-8 h-8 bg-black/10 rounded-full flex items-center justify-center hover:bg-black/20"><i class="ph-bold ph-x"></i></button>
+            </div>
+            <div class="py-4 bg-[#18181A] max-h-[50vh] overflow-y-auto px-6 custom-scrollbar">
+                <table id="modal-table" class="w-full">
+                    <thead id="modal-thead" class="text-gray-500 text-[10px] uppercase tracking-widest border-b border-[#25262B]"></thead>
+                    <tbody id="modal-tbody" class="text-sm"></tbody>
+                </table>
+                <div id="modal-empty" class="text-center py-12 text-gray-600 hidden text-sm font-bold uppercase tracking-widest">ไม่มีข้อมูลในรอบนี้</div>
+            </div>
+            <div class="p-6 bg-[#25262B] flex justify-between items-center">
+                <span class="text-gray-400 text-xs font-bold uppercase tracking-widest">ยอดรวมสุทธิ</span>
+                <span id="modal-total" class="font-black text-white text-2xl">0 ฿</span>
+            </div>
+        </div>
+    </div>
+
+    <div id="scanModal" class="modal-overlay" onclick="closeScanModal()">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="p-6 pb-4 bg-[#DCE58C] text-[#18181A] flex justify-between items-center rounded-t-[32px]">
+                <h3 class="font-black text-xl flex items-center gap-2"><i class="ph-bold ph-scan"></i> สแกนเพิ่มยอดขาย</h3>
+                <button onclick="closeScanModal()" class="w-8 h-8 bg-black/10 rounded-full flex items-center justify-center hover:bg-black/20"><i class="ph-bold ph-x"></i></button>
+            </div>
+            <div class="p-6 bg-[#18181A] space-y-4 overflow-y-auto custom-scrollbar" style="max-height: 70vh;">
+                <div>
+                    <label class="text-xs text-gray-400 font-bold mb-1 block">วันที่ขาย</label>
+                    <input type="date" id="scan-date" class="app-input border border-[#333]">
+                </div>
+                <div>
+                    <label class="text-xs text-gray-400 font-bold mb-1 block">อัปโหลดสลิป / หน้าจอ</label>
+                    <input type="file" id="scan-file" accept="image/*" class="w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#25262B] file:text-[#DCE58C] hover:file:bg-[#333]">
+                    <img id="scan-preview" class="mt-3 rounded-xl hidden max-h-40 mx-auto object-contain border border-[#333]">
+                </div>
+                <button id="btn-ai-scan" onclick="processAI()" class="w-full bg-[#25262B] text-[#DCE58C] py-3 rounded-full font-bold flex items-center justify-center gap-2 border border-[#DCE58C]/30 hidden hover:bg-[#333]">
+                    <i class="ph-fill ph-sparkle text-lg"></i> ให้ AI ช่วยอ่านข้อมูล
+                </button>
+                <div id="scan-results" class="pt-4 border-t border-[#333] hidden"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="manualModal" class="modal-overlay" onclick="closeManualModal()">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div id="manual-header" class="p-6 pb-4 bg-[#F26E5E] text-[#18181A] flex justify-between items-center rounded-t-[32px]">
+                <h3 class="font-black text-xl flex items-center gap-2" id="manual-title"><i class="ph-bold ph-receipt"></i> เพิ่มค่าใช้จ่าย</h3>
+                <button onclick="closeManualModal()" class="w-8 h-8 bg-black/10 rounded-full flex items-center justify-center hover:bg-black/20"><i class="ph-bold ph-x"></i></button>
+            </div>
+            <div class="p-6 bg-[#18181A] space-y-4">
+                <div>
+                    <label class="text-xs text-gray-400 font-bold mb-1 block">วันที่ทำรายการ</label>
+                    <input type="date" id="manual-date" class="app-input border border-[#333]">
+                </div>
+                <div>
+                    <label class="text-xs text-gray-400 font-bold mb-1 block">ชื่อรายการค่าใช้จ่าย</label>
+                    <input type="text" id="manual-name" placeholder="เช่น ค่าไฟ, ค่าน้ำ, ค่าเช่าร้าน" class="app-input border border-[#333]">
+                </div>
+                <div>
+                    <label class="text-xs text-gray-400 font-bold mb-1 block">ยอดเงินรวม (฿)</label>
+                    <input type="number" id="manual-total" placeholder="0.00" class="app-input border border-[#333]">
+                </div>
+                <button onclick="saveManualDataSubmit()" class="w-full bg-[#F26E5E] text-[#18181A] py-3.5 rounded-full font-black mt-2 flex items-center justify-center gap-2 hover:bg-[#d96254]">
+                    <i class="ph-bold ph-check-circle text-lg"></i> ยืนยันบันทึกข้อมูล
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="matTransModal" class="modal-overlay" onclick="closeMaterialTransactionModal()">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="p-6 pb-4 bg-[#F4D160] text-[#18181A] flex justify-between items-center rounded-t-[32px]">
+                <h3 class="font-black text-xl flex items-center gap-2"><i class="ph-bold ph-shopping-cart"></i> บันทึกซื้อวัตถุดิบเข้าคลัง</h3>
+                <button onclick="closeMaterialTransactionModal()" class="w-8 h-8 bg-black/10 rounded-full flex items-center justify-center hover:bg-black/20"><i class="ph-bold ph-x"></i></button>
+            </div>
+            <div class="p-6 bg-[#18181A] space-y-4">
+                <div>
+                    <label class="text-xs text-gray-400 font-bold mb-1 block">วันที่ซื้อ</label>
+                    <input type="date" id="mat-trans-date" class="app-input border border-[#333]">
+                </div>
+                <div>
+                    <label class="text-xs text-gray-400 font-bold mb-1 block">เลือกวัตถุดิบ</label>
+                    <select id="mat-trans-name" class="app-input border border-[#333]"></select>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="text-xs text-gray-400 font-bold mb-1 block">จำนวนที่ซื้อ</label>
+                        <input type="number" id="mat-trans-qty" placeholder="0" step="any" class="app-input border border-[#333]">
+                    </div>
+                    <div>
+                        <label class="text-xs text-gray-400 font-bold mb-1 block">ราคาต่อหน่วย (฿)</label>
+                        <input type="number" id="mat-trans-price" placeholder="0.00" step="any" class="app-input border border-[#333]">
+                    </div>
+                </div>
+                <button onclick="saveMaterialTransactionSubmit()" class="w-full bg-[#F4D160] text-[#18181A] py-3.5 rounded-full font-black mt-2 flex items-center justify-center gap-2 hover:bg-[#e2c153]">
+                    <i class="ph-bold ph-check-circle text-lg"></i> ยืนยันบันทึกรายการ
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="setupModal" class="modal-overlay" onclick="closeSetupModal()">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div id="setup-header" class="p-6 pb-4 text-[#18181A] flex justify-between items-center rounded-t-[32px]">
+                <h3 class="font-black text-xl flex items-center gap-2" id="setup-title">Setup</h3>
+                <button onclick="closeSetupModal()" class="w-8 h-8 bg-black/10 rounded-full flex items-center justify-center hover:bg-black/20"><i class="ph-bold ph-x"></i></button>
+            </div>
+            <div class="p-6 bg-[#18181A] space-y-4 max-h-[70vh] overflow-y-auto custom-scrollbar">
+                <input type="hidden" id="setup-type">
+                
+                <div>
+                    <label class="text-xs text-gray-400 font-bold mb-1 block" id="setup-label-name">ชื่อรายการ</label>
+                    <input type="text" id="setup-name" class="app-input border border-[#333]">
+                </div>
+
+                <div id="setup-field-price" class="hidden">
+                    <label class="text-xs text-gray-400 font-bold mb-1 block">ราคาขาย (฿)</label>
+                    <input type="number" id="setup-price" placeholder="0.00" class="app-input border border-[#333]">
+                </div>
+
+                <div id="setup-field-colB">
+                    <label class="text-xs text-gray-400 font-bold mb-2 block" id="setup-label-colB">คอลัมน์ B</label>
+                    <div id="setup-options-colB" class="flex flex-wrap gap-2"></div>
+                    <input type="hidden" id="setup-value-colB">
+                </div>
+
+                <div id="setup-field-colC">
+                    <label class="text-xs text-gray-400 font-bold mb-2 block" id="setup-label-colC">คอลัมน์ C</label>
+                    <div id="setup-options-colC" class="flex flex-wrap gap-2"></div>
+                    <input type="hidden" id="setup-value-colC">
+                </div>
+
+                <button onclick="saveSetupDataSubmit()" id="setup-submit-btn" class="w-full text-[#18181A] py-3.5 rounded-full font-black mt-2 flex items-center justify-center gap-2">
+                    <i class="ph-bold ph-check-circle text-lg"></i> ยืนยันสร้างรายการใหม่
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==============================================================
+        // 🔴 เอา URL ที่ได้จาก Google Apps Script ล่าสุดมาวางตรงนี้ด้วยครับ!
+        // ==============================================================
+        const API_URL = "https://script.google.com/macros/s/AKfycbx5ngHfwMtj-oGQlgggOW9iRJFG0JRlDtns5-SrstV1AKhgyUU-uXWaEUnx-Blroqff/exec";
+
+        let globalData = { sales: {}, materials: {}, expenses: {}, materialOptions: [], expenseOptions: [], fullMenuList: [], fullMaterialList: [] };
+        let activeTab = 'daily';
+        let trendChartInstance = null; 
+        const fMoney = (num) => Number(num || 0).toLocaleString('th-TH', { maximumFractionDigits: 2 });
+        let currentKpis = { salesTotal: 0, salesQty: 0, matTotal: 0, expTotal: 0 };
+        let currentLists = { sales: [], materials: [], expenses: [] };
+        
+        let currentBase64 = ""; let currentMimeType = ""; let scannedItemsArray = []; 
+
+        async function fetchData() {
+            setLoading(true, "SYNCING DATA...");
+            try {
+                const response = await fetch(API_URL);
+                if (!response.ok) throw new Error('Network error');
+                const jsonText = await response.text();
+                globalData = JSON.parse(jsonText);
+                const today = new Date();
+                document.getElementById('filter-date').value = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+                setupDropdowns();
+                applyFilters();
+                renderFullLists(); // 🟢 วาดรายการหน้าชี้ตเมนู และวัตถุดิบตัวเต็ม
+            } catch (error) {
+                console.error("Error:", error);
+            } finally { setLoading(false); }
+        }
+
+        // 🟢 ระบบสลับสลับหน้าหลักด้านบน (ภาพรวม / ชี้ตเมนู / ชี้ตวัตถุดิบ)
+        function switchPage(page) {
+            document.getElementById('main-page-dashboard').classList.add('hidden');
+            document.getElementById('main-page-menu').classList.add('hidden');
+            document.getElementById('main-page-material').classList.add('hidden');
+            document.getElementById('dashboard-filters-wrapper').classList.add('hidden');
+            
+            document.getElementById('page-btn-dashboard').className = "py-2.5 rounded-full font-bold text-xs text-center transition-all text-gray-400";
+            document.getElementById('page-btn-menu').className = "py-2.5 rounded-full font-bold text-xs text-center transition-all text-gray-400";
+            document.getElementById('page-btn-material').className = "py-2.5 rounded-full font-bold text-xs text-center transition-all text-gray-400";
+
+            if (page === 'dashboard') {
+                document.getElementById('main-page-dashboard').classList.remove('hidden');
+                document.getElementById('dashboard-filters-wrapper').classList.remove('hidden');
+                document.getElementById('page-btn-dashboard').className = "py-2.5 rounded-full font-bold text-xs text-center transition-all bg-[#F4D160] text-[#18181A]";
+                document.getElementById('display-period').innerText = "Overview";
+            } else if (page === 'menu') {
+                document.getElementById('main-page-menu').classList.remove('hidden');
+                document.getElementById('page-btn-menu').className = "py-2.5 rounded-full font-bold text-xs text-center transition-all bg-[#F4D160] text-[#18181A]";
+                document.getElementById('display-period').innerText = "ชี้ตเมนูทั้งหมด";
+            } else if (page === 'material') {
+                document.getElementById('main-page-material').classList.remove('hidden');
+                document.getElementById('page-btn-material').className = "py-2.5 rounded-full font-bold text-xs text-center transition-all bg-[#F4D160] text-[#18181A]";
+                document.getElementById('display-period').innerText = "ชี้ตวัตถุดิบทั้งหมด";
+            }
+        }
+
+        // 🟢 เรนเดอร์ตารางข้อมูลตัวเต็มสำหรับหน้า ชี้ตเมนู และ ชี้ตวัตถุดิบ
+        function renderFullLists() {
+            const menuContainer = document.getElementById('full-menu-list-container');
+            menuContainer.innerHTML = '';
+            if(!globalData.fullMenuList || globalData.fullMenuList.length === 0) {
+                menuContainer.innerHTML = `<p class="text-gray-500 text-xs text-center py-6 font-bold">ไม่มีข้อมูลเมนู</p>`;
+            } else {
+                globalData.fullMenuList.forEach(item => {
+                    menuContainer.innerHTML += `
+                        <div class="flex justify-between items-center bg-[#25262B] p-4 rounded-2xl border border-[#333]">
+                            <div>
+                                <p class="font-bold text-white text-sm">${item.name}</p>
+                                <span class="text-[10px] uppercase font-bold text-gray-400 px-2 py-0.5 bg-black/30 rounded-full w-fit mt-1 block">${item.group || 'ไม่ระบุกลุ่ม'}</span>
+                            </div>
+                            <span class="text-[#DCE58C] font-black text-lg">${fMoney(item.price)} ฿</span>
+                        </div>`;
+                });
+            }
+
+            const matContainer = document.getElementById('full-material-list-container');
+            matContainer.innerHTML = '';
+            if(!globalData.fullMaterialList || globalData.fullMaterialList.length === 0) {
+                matContainer.innerHTML = `<p class="text-gray-500 text-xs text-center py-6 font-bold">ไม่มีข้อมูลวัตถุดิบ</p>`;
+            } else {
+                globalData.fullMaterialList.forEach(item => {
+                    matContainer.innerHTML += `
+                        <div class="flex justify-between items-center bg-[#25262B] p-4 rounded-2xl border border-[#333]">
+                            <p class="font-bold text-white text-sm">${item.name}</p>
+                            <div class="flex gap-2 text-[10px] font-black">
+                                <span class="text-[#F4D160] px-2 py-1 bg-black/20 rounded-md">สต็อก: ${item.unitStock || '-'}</span>
+                                <span class="text-[#F26E5E] px-2 py-1 bg-black/20 rounded-md">ซื้อ: ${item.unitPurchase || '-'}</span>
+                            </div>
+                        </div>`;
+                });
+            }
+        }
+
+        // 🟢 เปิดฟอร์มสร้างข้อมูลลง Setup Sheet ใหม่ (ปุ่ม Pill เม็ดยาสวยๆ)
+        const OPTIONS_STOCK_UNIT = ['แก้ว', 'ขวด', 'ถุง', 'กิโล', 'แพ็ค', 'ของ', 'ชิ้น', 'กล่อง', 'นม'];
+        const OPTIONS_PURCHASE_UNIT = ['ขวด', 'ถุง', 'กล่อง', 'แพ็ค', 'มัด', 'โหล', 'กิโล', 'กระป๋อง'];
+        const OPTIONS_MENU_GROUP = ['ชา', 'เครื่องดื่ม', 'ซิกเนเจอร์', 'กาแฟ', 'กาแฟดริป'];
+
+        function openSetupModal(type) {
+            document.getElementById('setup-type').value = type;
+            document.getElementById('setup-name').value = '';
+            document.getElementById('setup-price').value = '';
+            
+            const header = document.getElementById('setup-header');
+            const title = document.getElementById('setup-title');
+            const submitBtn = document.getElementById('setup-submit-btn');
+
+            if (type === 'material') {
+                header.className = "p-6 pb-4 bg-[#F4D160] text-[#18181A] flex justify-between items-center rounded-t-[32px]";
+                title.innerHTML = '<i class="ph-bold ph-package"></i> สร้างวัตถุดิบใหม่';
+                submitBtn.className = "w-full bg-[#F4D160] text-[#18181A] py-3.5 rounded-full font-black mt-2 flex items-center justify-center gap-2 hover:bg-[#dfc059]";
+                document.getElementById('setup-label-name').innerText = "ชื่อวัตถุดิบ (คอลัมน์ A)";
+                
+                document.getElementById('setup-field-price').classList.add('hidden');
+                document.getElementById('setup-field-colB').classList.remove('hidden');
+                document.getElementById('setup-field-colC').classList.remove('hidden');
+
+                document.getElementById('setup-label-colB').innerText = "หน่วยนับสต็อก (คอลัมน์ B)";
+                renderChoiceButtons('setup-options-colB', 'setup-value-colB', OPTIONS_STOCK_UNIT);
+                
+                document.getElementById('setup-label-colC').innerText = "หน่วยนับที่ซื้อ (คอลัมน์ C)";
+                renderChoiceButtons('setup-options-colC', 'setup-value-colC', OPTIONS_PURCHASE_UNIT);
+            } else {
+                header.className = "p-6 pb-4 bg-[#DCE58C] text-[#18181A] flex justify-between items-center rounded-t-[32px]";
+                title.innerHTML = '<i class="ph-bold ph-coffee-bean"></i> สร้างเมนูใหม่';
+                submitBtn.className = "w-full bg-[#DCE58C] text-[#18181A] py-3.5 rounded-full font-black mt-2 flex items-center justify-center gap-2 hover:bg-[#c3cb7a]";
+                document.getElementById('setup-label-name').innerText = "ชื่อเมนู (คอลัมน์ A)";
+                
+                document.getElementById('setup-field-price').classList.remove('hidden');
+                document.getElementById('setup-field-colB').classList.add('hidden'); // เมนูไม่มีคอลัมน์ B ในฟอร์มนี้ (ราคาอยู่ช่องบน)
+                document.getElementById('setup-field-colC').classList.remove('hidden');
+
+                document.getElementById('setup-label-colC').innerText = "กลุ่มเมนู (คอลัมน์ C)";
+                renderChoiceButtons('setup-options-colC', 'setup-value-colC', OPTIONS_MENU_GROUP);
+            }
+
+            document.getElementById('setupModal').style.display = 'flex';
+        }
+
+        function closeSetupModal() { document.getElementById('setupModal').style.display = 'none'; }
+
+        // ฟังก์ชันวาดปุ่มเม็ดยาแบบกดเลือกได้
+        function renderChoiceButtons(containerId, hiddenInputId, optionsArray) {
+            const container = document.getElementById(containerId);
+            const hiddenInput = document.getElementById(hiddenInputId);
+            container.innerHTML = '';
+            hiddenInput.value = optionsArray[0]; // เลือกอันแรกให้เป็น Default
+
+            optionsArray.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = "choice-btn " + (idx === 0 ? "selected" : "");
+                btn.innerText = opt;
+                btn.onclick = function() {
+                    container.querySelectorAll('.choice-btn').forEach(b => b.classList.remove('selected'));
+                    btn.classList.add('selected');
+                    hiddenInput.value = opt;
+                };
+                container.appendChild(btn);
+            });
+        }
+
+        // ยืนยันการบันทึกข้อมูลตั้งค่าเซ็ตอัปเมนู/วัตถุดิบตัวใหม่ลงชีต
+        async function saveSetupDataSubmit() {
+            const type = document.getElementById('setup-type').value;
+            const name = document.getElementById('setup-name').value.trim();
+
+            if (!name) { alert("กรุณากรอกชื่อรายการด้วยครับ"); return; }
+
+            let payload = { name: name };
+
+            if (type === 'material') {
+                payload.action = 'addNewMaterialSetup';
+                payload.unitStock = document.getElementById('setup-value-colB').value;
+                payload.unitPurchase = document.getElementById('setup-value-colC').value;
+            } else {
+                const price = document.getElementById('setup-price').value;
+                if (!price) { alert("กรุณาระบุราคาขายของเมนูด้วยครับ"); return; }
+                payload.action = 'addNewMenuSetup';
+                payload.price = parseFloat(price);
+                payload.group = document.getElementById('setup-value-colC').value;
+            }
+
+            setLoading(true, "กำลังลงทะเบียนรายการใหม่...");
+            try {
+                await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) });
+                alert("สร้างรายการใหม่เรียบร้อยแล้ว! 🎉");
+                closeSetupModal();
+                fetchData();
+            } catch (err) { alert("เกิดปัญหา: " + err.message); } finally { setLoading(false); }
+        }
+
+        // ฟังก์ชันเปิดบันทึกซื้อวัตถุดิบประจำวัน
+        function openMaterialTransactionModal() {
+            const today = new Date();
+            document.getElementById('mat-trans-date').value = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+            document.getElementById('mat-trans-qty').value = '';
+            document.getElementById('mat-trans-price').value = '';
+            
+            const select = document.getElementById('mat-trans-name');
+            select.innerHTML = '';
+            if(globalData.materialOptions && globalData.materialOptions.length > 0) {
+                globalData.materialOptions.forEach(opt => { select.innerHTML += `<option value="${opt}">${opt}</option>`; });
+            } else { select.innerHTML = '<option value="">-- ไม่พบรายชื่อวัตถุดิบ --</option>'; }
+
+            document.getElementById('matTransModal').style.display = 'flex';
+        }
+        function closeMaterialTransactionModal() { document.getElementById('matTransModal').style.display = 'none'; }
+
+        async function saveMaterialTransactionSubmit() {
+            const date = document.getElementById('mat-trans-date').value;
+            const name = document.getElementById('mat-trans-name').value;
+            const qty = document.getElementById('mat-trans-qty').value;
+            const price = document.getElementById('mat-trans-price').value;
+
+            if(!name || !qty || !price) { alert("กรุณากรอกข้อมูลให้ครบถ้วน"); return; }
+
+            setLoading(true, "กำลังบันทึกซื้อวัตถุดิบ...");
+            try {
+                await fetch(API_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ action: 'saveMaterial', date: date, name: name, qty: parseFloat(qty), price: parseFloat(price) })
+                });
+                alert("บันทึกซื้อวัตถุดิบเรียบร้อยแล้ว! 🎉");
+                closeMaterialTransactionModal();
+                fetchData();
+            } catch (err) { alert("เกิดข้อผิดพลาด: " + err.message); } finally { setLoading(false); }
+        }
+
+        // ================= ระบบอื่นๆ และ แดชบอร์ด (คงของเดิมไว้ 100%) =================
+        document.getElementById('scan-file').addEventListener('change', function(e) {
+            const file = e.target.files[0]; if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                currentBase64 = event.target.result.split(',')[1]; currentMimeType = file.type;
+                const preview = document.getElementById('scan-preview'); preview.src = event.target.result; preview.classList.remove('hidden');
+                document.getElementById('btn-ai-scan').classList.remove('hidden'); document.getElementById('scan-results').classList.add('hidden'); 
+            };
+            reader.readAsDataURL(file);
+        });
+
+        function openScanModal() {
+            const today = new Date(); document.getElementById('scan-date').value = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+            document.getElementById('scan-file').value = ""; document.getElementById('scan-preview').classList.add('hidden'); document.getElementById('btn-ai-scan').classList.add('hidden'); document.getElementById('scan-results').classList.add('hidden');
+            scannedItemsArray = []; document.getElementById('scanModal').style.display = 'flex';
+        }
+        function closeScanModal() { document.getElementById('scanModal').style.display = 'none'; }
+
+        async function processAI() {
+            if(!currentBase64) return; setLoading(true, "AI กำลังอ่านข้อมูล Loyverse...");
+            try {
+                const response = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'scanImage', imageBase64: currentBase64, mimeType: currentMimeType }) });
+                const data = await response.json();
+                if(data.error) { alert("AI พบปัญหา: " + data.error); } else {
+                    scannedItemsArray = Array.isArray(data) ? data : [data];
+                    let htmlList = `<div class="bg-[#25262B] p-4 rounded-xl space-y-3 mb-4">`;
+                    let sumQty = 0; let sumTotal = 0;
+                    scannedItemsArray.forEach((item) => {
+                        htmlList += `<div class="flex justify-between items-center border-b border-[#333] pb-2 last:border-0 last:pb-0"><div><p class="text-sm text-[#F4D160] font-bold">${item.menu}</p><p class="text-[10px] text-gray-500">จำนวน: ${item.qty} แก้ว</p></div><span class="text-[#DCE58C] font-black text-lg">${item.total} ฿</span></div>`;
+                        sumQty += Number(item.qty) || 0; sumTotal += Number(item.total) || 0;
+                    });
+                    htmlList += `</div>`;
+                    const scanResults = document.getElementById('scan-results');
+                    scanResults.innerHTML = `<p class="text-xs text-gray-500 font-bold uppercase tracking-widest mb-2 text-center">รายการที่สแกนได้ (${scannedItemsArray.length} รายการ)</p>${htmlList}<div class="flex justify-between items-center px-2 mb-4 bg-black/20 p-3 rounded-lg border border-[#333]"><span class="text-sm font-bold text-gray-400">รวมทั้งหมด: <span class="text-white">${sumQty} แก้ว</span></span><span class="text-xl font-black text-[#F4D160]">${sumTotal} ฿</span></div><button onclick="saveAllScannedData()" class="w-full bg-[#DCE58C] text-[#18181A] py-3.5 rounded-full font-black mt-2 flex items-center justify-center gap-2 hover:bg-[#c6ce7e]"><i class="ph-bold ph-check-circle text-lg"></i> ยืนยันบันทึกทั้งหมด</button>`;
+                    scanResults.classList.remove('hidden');
+                }
+            } catch (err) { alert("เกิดข้อผิดพลาดในการเชื่อมต่อกับ AI: " + err.message); } finally { setLoading(false); }
+        }
+
+        async function saveAllScannedData() {
+            if (scannedItemsArray.length === 0) return; setLoading(true, `กำลังบันทึก ${scannedItemsArray.length} รายการ...`);
+            const date = document.getElementById('scan-date').value;
+            try {
+                for(const item of scannedItemsArray) { await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'saveData', date: date, menu: item.menu, qty: item.qty, total: item.total }) }); }
+                alert("บันทึกข้อมูลสำเร็จ! 🎉"); closeScanModal(); fetchData(); 
+            } catch(err) { alert("เกิดข้อผิดพลาดในการบันทึก: " + err.message); } finally { setLoading(false); }
+        }
+
+        function openManualModal(type) {
+            const today = new Date(); document.getElementById('manual-date').value = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+            document.getElementById('manual-name').value = ''; document.getElementById('manual-total').value = '';
+            document.getElementById('manualModal').style.display = 'flex';
+        }
+        function closeManualModal() { document.getElementById('manualModal').style.display = 'none'; }
+
+        async function saveManualDataSubmit() {
+            const date = document.getElementById('manual-date').value; const name = document.getElementById('manual-name').value; const total = document.getElementById('manual-total').value;
+            if (!name || !total) { alert("กรุณากรอกข้อมูลชื่อรายการและยอดเงินให้ครบถ้วน"); return; }
+            setLoading(true, "กำลังส่งข้อมูลบันทึก...");
+            try {
+                await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'saveExpense', date: date, name: name, total: parseFloat(total) }) });
+                alert("บันทึกข้อมูลเรียบร้อยแล้ว! 🎉"); closeManualModal(); fetchData(); 
+            } catch (err) { alert("เกิดปัญหาในการบันทึก: " + err.message); } finally { setLoading(false); }
+        }
+
+        function setupDropdowns() {
+            const years = new Set(); const currentYear = new Date().getFullYear();
+            const extractYear = (obj) => { Object.keys(obj).forEach(dateStr => years.add(dateStr.split('-')[0])); };
+            extractYear(globalData.sales); extractYear(globalData.materials); extractYear(globalData.expenses);
+            let yearArray = Array.from(years); if(!yearArray.includes(String(currentYear))) yearArray.push(String(currentYear));
+            yearArray.sort().reverse(); 
+            const selectMYear = document.getElementById('filter-monthly-year'); const selectYYear = document.getElementById('filter-yearly-year');
+            selectMYear.innerHTML = ''; selectYYear.innerHTML = '';
+            yearArray.forEach(y => { selectMYear.innerHTML += `<option value="${y}">${y}</option>`; selectYYear.innerHTML += `<option value="${y}">${y}</option>`; });
+            document.getElementById('filter-monthly-month').value = String(new Date().getMonth() + 1).padStart(2, '0');
+            document.getElementById('filter-monthly-year').value = String(currentYear); document.getElementById('filter-yearly-year').value = String(currentYear);
+        }
+
+        function setTab(tab) {
+            activeTab = tab;
+            document.querySelectorAll('.pill-tab').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(`tab-${tab}`).classList.add('active');
+            document.getElementById('control-daily').classList.add('hidden'); document.getElementById('control-monthly').classList.add('hidden'); document.getElementById('control-yearly').classList.add('hidden');
+            if (tab === 'daily') document.getElementById('control-daily').classList.remove('hidden');
+            if (tab === 'monthly') document.getElementById('control-monthly').classList.remove('hidden');
+            if (tab === 'yearly') document.getElementById('control-yearly').classList.remove('hidden');
+            applyFilters();
+        }
+
+        function applyFilters() {
+            let dateLabel = ""; let y, m, d;
+            if (activeTab === 'daily') {
+                const date = document.getElementById('filter-date').value; if (date) { [y,m,d] = date.split('-'); dateLabel = `${d}/${m}/${y}`; }
+            } else if (activeTab === 'monthly') {
+                y = document.getElementById('filter-monthly-year').value; m = document.getElementById('filter-monthly-month').value;
+                const mName = document.getElementById('filter-monthly-month').options[document.getElementById('filter-monthly-month').selectedIndex].text; dateLabel = `${mName} ${y}`;
+            } else if (activeTab === 'yearly') { y = document.getElementById('filter-yearly-year').value; dateLabel = `YEAR ${y}`; }
+            if(document.getElementById('main-page-dashboard').classList.contains('hidden') === false) {
+                document.getElementById('badge-mode').innerText = dateLabel;
+            }
+            const isMatch = (dateStr) => {
+                if(!dateStr) return false;
+                if (activeTab === 'daily') return dateStr === document.getElementById('filter-date').value;
+                if (activeTab === 'monthly') return dateStr.startsWith(`${y}-${m}`);
+                if (activeTab === 'yearly') return dateStr.startsWith(`${y}-`);
+                return false;
+            };
+            currentKpis = { salesTotal: 0, salesQty: 0, matTotal: 0, expTotal: 0 };
+            let groupedSales = {}; let listMats = {}; let listExps = {};
+            Object.keys(globalData.sales).forEach(dateStr => {
+                if(isMatch(dateStr)) {
+                    currentKpis.salesTotal += globalData.sales[dateStr].total; currentKpis.salesQty += globalData.sales[dateStr].qty;
+                    Object.keys(globalData.sales[dateStr].details).forEach(menu => {
+                        if(!groupedSales[menu]) groupedSales[menu] = { name: menu, qty: 0, total: 0 };
+                        groupedSales[menu].qty += globalData.sales[dateStr].details[menu].qty; groupedSales[menu].total += globalData.sales[dateStr].details[menu].total;
+                    });
+                }
+            });
+            Object.keys(globalData.materials).forEach(dateStr => {
+                if(isMatch(dateStr)) {
+                    currentKpis.matTotal += globalData.materials[dateStr].total;
+                    Object.keys(globalData.materials[dateStr].details).forEach(item => {
+                        if(!listMats[item]) listMats[item] = { name: item, total: 0 };
+                        listMats[item].total += globalData.materials[dateStr].details[item].total;
+                    });
+                }
+            });
+            Object.keys(globalData.expenses).forEach(dateStr => {
+                if(isMatch(dateStr)) {
+                    currentKpis.expTotal += globalData.expenses[dateStr].total;
+                    Object.keys(globalData.expenses[dateStr].details).forEach(item => {
+                        if(!listExps[item]) listExps[item] = { name: item, total: 0 };
+                        listExps[item].total += globalData.expenses[dateStr].details[item].total;
+                    });
+                }
+            });
+            currentLists.sales = Object.values(groupedSales).sort((a,b) => b.total - a.total);
+            currentLists.materials = Object.values(listMats).sort((a,b) => b.total - a.total);
+            currentLists.expenses = Object.values(listExps).sort((a,b) => b.total - a.total);
+            updateUI(); drawChart();
+        }
+
+        function updateUI() {
+            let sumCost = currentKpis.matTotal + currentKpis.expTotal; let net = currentKpis.salesTotal - sumCost;
+            document.getElementById('kpi-sales').innerText = fMoney(currentKpis.salesTotal) + ' ฿';
+            document.getElementById('kpi-expenses').innerText = fMoney(sumCost) + ' ฿';
+            document.getElementById('sub-materials').innerText = fMoney(currentKpis.matTotal) + ' ฿';
+            document.getElementById('sub-expenses').innerText = fMoney(currentKpis.expTotal) + ' ฿';
+            document.getElementById('kpi-qty').innerText = fMoney(currentKpis.salesQty); document.getElementById('kpi-profit').innerText = fMoney(net) + ' ฿';
+            const pCard = document.getElementById('card-net-profit'); const catSpeech = document.getElementById('cat-speech'); const iconProfit = document.getElementById('icon-profit');
+            if (net < 0) { pCard.className = 'app-card card-red text-white'; catSpeech.innerText = "ติดลบอยู่นะ ฮึบๆ! 😿"; iconProfit.className = "ph-bold ph-trend-down text-xl";
+            } else { pCard.className = 'app-card card-yellow text-[#18181A]'; catSpeech.innerText = "ยอดเยี่ยมมากเหมียว! 😻"; iconProfit.className = "ph-bold ph-trend-up text-xl"; }
+            const top10Container = document.getElementById('top10-list'); top10Container.innerHTML = '';
+            if(currentLists.sales.length === 0) { top10Container.innerHTML = '<p class="text-gray-600 text-[10px] text-center py-4 uppercase font-bold tracking-widest">No Data in this period</p>';
+            } else {
+                currentLists.sales.slice(0, 10).forEach((item, index) => {
+                    top10Container.innerHTML += `<div class="flex justify-between items-center bg-[#18181A] p-3 rounded-xl border border-[#25262B]"><div class="flex items-center gap-3"><span class="w-6 h-6 rounded bg-[#F26E5E] text-[#18181A] flex items-center justify-center text-[10px] font-black">${index + 1}</span><span class="text-sm font-bold text-gray-200 truncate max-w-[140px] md:max-w-[180px]">${item.name}</span></div><div class="text-right"><div class="text-sm font-black text-[#DCE58C]">${fMoney(item.total)} ฿</div><div class="text-[10px] text-gray-500">${item.qty} แก้ว</div></div></div>`;
+                });
+            }
+        }
+
+        function getNetIncomeForDateCondition(conditionFn) {
+            let s = 0, m = 0, e = 0;
+            Object.keys(globalData.sales).forEach(d => { if(conditionFn(d)) s += globalData.sales[d].total; });
+            Object.keys(globalData.materials).forEach(d => { if(conditionFn(d)) m += globalData.materials[d].total; });
+            Object.keys(globalData.expenses).forEach(d => { if(conditionFn(d)) e += globalData.expenses[d].total; });
+            return s - (m + e);
+        }
+
+        function drawChart() {
+            const ctx = document.getElementById('trendChart').getContext('2d'); if (trendChartInstance) trendChartInstance.destroy();
+            let labels = []; let dataPoints = [];
+            if (activeTab === 'daily') {
+                const targetDate = new Date(document.getElementById('filter-date').value);
+                for(let i=6; i>=0; i--) {
+                    let d = new Date(targetDate); d.setDate(d.getDate() - i);
+                    let dStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+                    labels.push(`${d.getDate()}/${d.getMonth()+1}`); dataPoints.push(getNetIncomeForDateCondition(x => x === dStr));
+                }
+            } else if (activeTab === 'monthly') {
+                const y = document.getElementById('filter-monthly-year').value; const m = document.getElementById('filter-monthly-month').value;
+                const daysInMonth = new Date(y, m, 0).getDate();
+                for(let i=1; i<=daysInMonth; i++) { let dStr = `${y}-${m}-${String(i).padStart(2,'0')}`; labels.push(i); dataPoints.push(getNetIncomeForDateCondition(x => x === dStr)); }
+            } else if (activeTab === 'yearly') {
+                const y = document.getElementById('filter-yearly-year').value; const monthNames = ["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."];
+                for(let i=1; i<=12; i++) { labels.push(monthNames[i-1]); let prefix = `${y}-${String(i).padStart(2,'0')}`; dataPoints.push(getNetIncomeForDateCondition(x => x.startsWith(prefix))); }
+            }
+            let gradient = ctx.createLinearGradient(0, 0, 0, 200); gradient.addColorStop(0, 'rgba(244, 209, 96, 0.4)'); gradient.addColorStop(1, 'rgba(244, 209, 96, 0)');
+            trendChartInstance = new Chart(ctx, { type: 'line', data: { labels: labels, datasets: [{ data: dataPoints, borderColor: '#F4D160', backgroundColor: gradient, borderWidth: 3, pointBackgroundColor: '#18181A', pointBorderColor: '#F4D160', pointBorderWidth: 2, pointRadius: 4, fill: true, tension: 0.4 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { display: false }, y: { grid: { color: '#333', drawBorder: false }, ticks: { color: '#888', font: {family: 'Poppins', size: 10}, maxTicksLimit: 5, callback: function(v) { return v.toLocaleString(); } } } } } });
+        }
+
+        function openModal(type) {
+            const header = document.getElementById('modal-header'); const thead = document.getElementById('modal-thead'); const tbody = document.getElementById('modal-tbody'); const empty = document.getElementById('modal-empty'); const title = document.getElementById('modal-title');
+            thead.innerHTML = ''; tbody.innerHTML = ''; let listData = []; let totalSum = 0;
+            if (type === 'sales') {
+                header.className = "p-6 pb-4 bg-[#DCE58C] text-[#18181A] flex justify-between items-center rounded-t-[32px]"; title.innerHTML = '<i class="ph-bold ph-receipt"></i> Sales Details';
+                thead.innerHTML = `<tr><th class="py-3 text-left">Menu</th><th class="text-center py-3">Qty</th><th class="text-right py-3">Total</th></tr>`;
+                listData = currentLists.sales; totalSum = currentKpis.salesTotal;
+                listData.forEach(item => { tbody.innerHTML += `<tr class="border-b border-[#25262B]"><td class="py-3 font-bold text-gray-200">${item.name}</td><td class="text-center text-gray-400 font-bold">${item.qty}</td><td class="text-right text-white font-black">${fMoney(item.total)} ฿</td></tr>`; });
+            } else {
+                let isMat = (type === 'materials'); header.className = "p-6 pb-4 bg-[#F26E5E] text-[#18181A] flex justify-between items-center rounded-t-[32px]"; title.innerHTML = isMat ? '<i class="ph-bold ph-package"></i> Materials' : '<i class="ph-bold ph-coins"></i> Expenses';
+                thead.innerHTML = `<tr><th class="py-3 text-left">Item</th><th class="text-right py-3">Total</th></tr>`;
+                listData = isMat ? currentLists.materials : currentLists.expenses; totalSum = isMat ? currentKpis.matTotal : currentKpis.expTotal;
+                listData.forEach(item => { tbody.innerHTML += `<tr class="border-b border-[#25262B]"><td class="py-3 font-bold text-gray-200">${item.name}</td><td class="text-right text-white font-black">${fMoney(item.total)} ฿</td></tr>`; });
+            }
+            if (listData.length === 0) { empty.classList.remove('hidden'); document.getElementById('modal-table').classList.add('hidden'); } else { empty.classList.add('hidden'); document.getElementById('modal-table').classList.remove('hidden'); }
+            document.getElementById('modal-total').innerText = fMoney(totalSum) + ' ฿'; document.getElementById('detailModal').style.display = 'flex';
+        }
+        function closeModal() { document.getElementById('detailModal').style.display = 'none'; }
+        
+        async function saveAsImage() {
+            const container = document.getElementById('capture-container'); const nav = document.querySelector('.bottom-nav'); nav.style.display = 'none'; 
+            const originalOverflow = document.body.style.overflow; document.body.style.overflow = 'visible'; window.scrollTo(0, 0); const fullHeight = container.scrollHeight; 
+            try { 
+                const canvas = await html2canvas(container, { backgroundColor: '#18181A', scale: 2, useCORS: true, scrollY: 0, windowHeight: fullHeight }); 
+                document.body.style.overflow = originalOverflow; nav.style.display = 'flex'; 
+                canvas.toBlob(async (blob) => {
+                    const file = new File([blob], `DucxStreetCoffee_${activeTab}.png`, { type: 'image/png' });
+                    if (navigator.share) { try { await navigator.share({ files: [file], title: 'ยอดขาย DucxStreetCoffee' }); } catch (e) {} } else {
+                        const link = document.createElement('a'); link.download = `Balenrista_${activeTab}.png`; link.href = canvas.toDataURL("image/png"); link.click(); 
+                    }
+                }, 'image/png');
+            } catch (err) { document.body.style.overflow = originalOverflow; nav.style.display = 'flex'; console.error(err); }
+        }
+
+        window.onload = fetchData;
+    </script>
+</body>
+</html>
