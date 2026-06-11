@@ -67,6 +67,15 @@
         <p class="text-[#9cb080] font-bold tracking-widest text-sm animate-pulse" id="loading-text">SYNCING DATA...</p>
     </div>
 
+    <div id="imagePreviewModal" class="fixed inset-0 bg-black/90 backdrop-blur-sm z-[300] hidden flex-col items-center justify-center p-4" onclick="closeImagePreviewModal()">
+        <button class="absolute top-6 right-6 w-10 h-10 bg-[#273338] text-[#9cb080] rounded-full flex items-center justify-center border border-[#9cb080] hover:bg-[#618764] hover:text-white z-50 transition" onclick="closeImagePreviewModal()">
+            <i class="ph-bold ph-x text-xl"></i>
+        </button>
+        <div class="relative w-full max-w-lg flex items-center justify-center">
+            <img id="preview-modal-img" src="" class="max-w-full max-h-[85vh] object-contain rounded-2xl shadow-2xl border border-[#2b5748]" onclick="event.stopPropagation()">
+        </div>
+    </div>
+
     <div class="max-w-md mx-auto w-full min-h-screen relative" id="capture-container">
         <header class="p-6 flex justify-between items-center">
             <div>
@@ -350,7 +359,7 @@
                 </div>
                 <div>
                     <label class="text-xs text-[#9cb080] font-bold mb-1 block">ถ่ายรูปบิลสลิปจากมือถือ</label>
-                    <input type="file" id="upload-bill-file" accept="image/*" class="w-full text-sm text-[#9cb080] file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#273338] file:text-[#9cb080] border border-[#2b5748] rounded-full p-1">
+                    <input type="file" id="upload-bill-file" accept="image/*" class="w-full text-sm text-[#9cb080] file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#2b5748] file:text-[#9cb080] border border-[#2b5748] rounded-full p-1">
                     <img id="upload-bill-preview" class="mt-3 rounded-xl hidden max-h-40 mx-auto object-contain border border-[#2b5748]">
                 </div>
                 <div>
@@ -366,7 +375,7 @@
 
     <script>
         // ==============================================================
-        // 🔴 สำคัญมาก: นำ URL ล่าสุดของ Apps Script มาแปะตรงนี้เลยครับ
+        // 🔴 อย่าลืมนำลิงก์ Google Apps Script มาใส่ตรงนี้นะครับ
         // ==============================================================
         const API_URL = "https://script.google.com/macros/s/AKfycbyTVd0iFNaHLR8K-il87RX55DDvnQOfE5sEeABSzPgQwGr8HYiWuL-h3Bs06a9qPTTr/exec";
 
@@ -416,12 +425,12 @@
                 document.getElementById('dashboard-filters-wrapper').classList.remove('hidden');
                 document.getElementById('display-period').innerText = "Overview";
             } else if (page === 'menu') {
-                document.getElementById('display-period').innerText = "ชี้ตเมนูทั้งหมด";
+                document.getElementById('display-period').innerText = "เมนูทั้งหมด";
             } else if (page === 'material') {
-                document.getElementById('display-period').innerText = "ชี้ตวัตถุดิบทั้งหมด";
+                document.getElementById('display-period').innerText = "วัตถุดิบทั้งหมด";
             } else if (page === 'bills') {
                 document.getElementById('dashboard-filters-wrapper').classList.remove('hidden');
-                document.getElementById('display-period').innerText = "ชี้ตบิลต่างๆ";
+                document.getElementById('display-period').innerText = "บิลต่างๆ";
             }
         }
 
@@ -461,6 +470,7 @@
             }
         }
 
+        // 🟢 เรนเดอร์หน้าบิล + ใส่ฟังก์ชันเปิด Popup
         function renderBillsList(isMatch) {
             const container = document.getElementById('full-bills-list-container');
             container.innerHTML = '';
@@ -477,7 +487,7 @@
 
             filtered.forEach(item => {
                 let imageBoxHtml = item.imageUrl ? 
-                    `<img src="${item.imageUrl}" onclick="window.open('${item.imageUrl}', '_blank')" class="w-10 h-10 object-cover rounded-lg border border-[#9cb080] cursor-pointer shadow-md" title="คลิกเพื่อขยายรูป">` : 
+                    `<img src="${item.imageUrl}" onclick="openImagePreviewModal('${item.imageUrl}')" class="w-10 h-10 object-cover rounded-lg border border-[#9cb080] cursor-pointer shadow-md active:scale-90 transition" title="คลิกเพื่อขยายรูป">` : 
                     `<span class="text-[10px] text-gray-400 italic">ยังไม่แนบ</span>`;
                 
                 container.innerHTML += `
@@ -500,7 +510,24 @@
             });
         }
 
-        // 🟢 ระบบบีบอัดรูปภาพฝั่งหน้าบ้านอัตโนมัติ (ย่อขนาดรูปให้เบา ป้องกัน Google บล็อก)
+        // 🟢 ฟังก์ชันเปิด/ปิด Popup ดูรูปภาพสลิป
+        function openImagePreviewModal(imageUrl) {
+            document.getElementById('preview-modal-img').src = imageUrl;
+            const modal = document.getElementById('imagePreviewModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            document.body.style.overflow = 'hidden'; 
+        }
+
+        function closeImagePreviewModal() {
+            const modal = document.getElementById('imagePreviewModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            document.getElementById('preview-modal-img').src = ""; 
+            document.body.style.overflow = 'visible'; 
+        }
+
+        // 🟢 ระบบบีบอัดรูปก่อนส่ง
         document.getElementById('upload-bill-file').addEventListener('change', function(e) {
             const file = e.target.files[0]; 
             if (!file) return; 
@@ -512,7 +539,7 @@
                 const img = new Image();
                 img.onload = function() {
                     const canvas = document.createElement('canvas');
-                    const MAX_WIDTH = 800; // ล็อกความกว้างไว้แค่ 800px ไฟล์จะเล็กมาก
+                    const MAX_WIDTH = 800;
                     const scaleSize = MAX_WIDTH / img.width;
                     canvas.width = MAX_WIDTH;
                     canvas.height = img.height * scaleSize;
@@ -520,7 +547,6 @@
                     const ctx = canvas.getContext('2d');
                     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
-                    // บีบอัดเป็นไฟล์ JPEG คุณภาพ 60% โหลดไวชัวร์
                     const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.6);
                     
                     currentBillBase64 = compressedDataUrl.split(',')[1]; 
@@ -550,9 +576,8 @@
         async function saveBillUploadSubmit() {
             const rowIndex = document.getElementById('upload-bill-row-index').value;
             const note = document.getElementById('upload-bill-note').value;
-            const btn = document.getElementById('btn-confirm-upload');
             
-            setLoading(true, "กำลังฝังรูปภาพลงในเซลล์ Sheets...");
+            setLoading(true, "กำลังส่งรูปลงตาราง Sheet...");
             try {
                 const response = await fetch(API_URL, {
                     method: 'POST',
@@ -561,14 +586,14 @@
                 const result = await response.json();
                 
                 if (result.error) {
-                    alert("❌ ล้มเหลว! Google Drive ปฏิเสธสิทธิ์: " + result.error);
+                    alert("❌ ล้มเหลว! Google ปฏิเสธสิทธิ์: " + result.error);
                 } else {
                     alert("🎉 สำเร็จ! รูปภาพสลิปเด้งเข้าเซลล์ตารางเรียบร้อยแล้วครับ");
                     closeBillUploadModal();
                     fetchData();
                 }
             } catch(err) { 
-                alert("❌ เกิดข้อผิดพลาดในระบบส่งข้อมูล: " + err.message); 
+                alert("❌ เกิดข้อผิดพลาด: " + err.message); 
             } finally { setLoading(false); }
         }
 
@@ -793,7 +818,6 @@
             return s - (m + e);
         }
 
-        // 📈 วาดกราฟแนวโน้มกำไรสุทธิ
         function drawChart() {
             const ctx = document.getElementById('trendChart').getContext('2d'); if (trendChartInstance) trendChartInstance.destroy();
             let labels = []; let dataPoints = [];
@@ -832,7 +856,7 @@
         }
         function closeModal() { document.getElementById('detailModal').style.display = 'none'; }
         
-        // 📸 ระบบแคปภาพหน้าจอแบบอัปเกรด ป้องกันขอบแหว่ง
+        // 🟢 ระบบถ่ายภาพหน้าจอ (แก้ขอบแหว่ง)
         async function saveAsImage() {
             const container = document.getElementById('capture-container'); const nav = document.querySelector('.bottom-nav'); nav.style.display = 'none'; 
             const originalOverflow = document.body.style.overflow; const originalMargin = container.style.margin; const originalMaxWidth = container.style.maxWidth;
